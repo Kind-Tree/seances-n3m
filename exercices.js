@@ -354,7 +354,8 @@
   }
 
   /* ---------- Circuit fermé défense / transition, sur un demi-terrain ----------
-     variante "construction" : l'attaquant renvoie dans son terrain en bidouille ou du poing. */
+     variante "construction" : l'attaquant renvoie dans son terrain en bidouille ou du poing.
+     mire : un plot à chaque bout de filet, à 1 m du filet, cible de la passe de transition. */
   function circuitTransition(o) {
     o = o || {};
     const construction = o.variante === "construction";
@@ -367,6 +368,7 @@
         const P2 = [-0.95, 7.8], P4 = [-0.95, 1.2], D5 = [-6.2, 2.0], D1 = [-6.2, 7.0];
         s.cadre("A");
         s.zone("coeur", { x: -4.3, y: 4.5, r: 1.35 }, { label: "cœur de terrain" });
+        if (o.mire) { s.plot(-1.0, 0.4); s.plot(-1.0, 8.6); }
         s.j("f2", P2, 1, "a");
         s.j("f4", P4, 2, "a");
         s.j("d", D5, 3, "a");
@@ -376,10 +378,10 @@
         s.ballon("x", "f2");
         s.etape("Mise en place", "2 attaquants au filet (postes 2 et 4), 1 défenseur en 5, 1 joueur en 1 pour la transition, 2 en attente.", [W(0.6)]);
         s.etape("Attaque du poste 2", "Attaque du poste 2 vers le poste 5.", [S("f2"), B("x", "d", "attaque")]);
-        s.etape("Défense cœur de terrain", "Le poste 5 défend haut, au cœur du terrain. Le poste 1 vient sous le ballon.", [
+        s.etape("Défense cœur de terrain", o.mire ? "Bas sur les appuis, ballon haut : la défense vise le cœur de terrain. Le poste 1 vient sous le ballon." : "Le poste 5 défend haut, au cœur du terrain. Le poste 1 vient sous le ballon.", [
           P(M("t", [-4.6, 5.0], { d: 1.0 }), B("x", "t", "defense", { h: 1.1 }))
         ]);
-        s.etape("Passe de transition", "Passe de transition du poste 1 vers le poste 4.", [B("x", "f4", "transi")]);
+        s.etape("Passe de transition", o.mire ? "Passe de transition vers le bout de filet : on s'oriente et on vise avant la mire, à 1 m du filet. Le plot donne le repère." : "Passe de transition du poste 1 vers le poste 4.", [B("x", "f4", "transi")]);
         const tourne = P(
           [M("f2", [-9.9, 8.4], { d: 1.5 }), M("f2", [-10.6, 5.4], { d: 0.7 })],
           M("w1", D1, { d: 1.1 }), M("w2", [-10.6, 3.6], { d: 0.6, delai: 0.4 }), M("t", P2, { d: 1.2, delai: 0.6 })
@@ -552,8 +554,10 @@
   /* ---------- 6 contre 6 à ballons imposés ----------
      o.phases : { chapitre, type, pour, en, fin, annonce, pop, etapes: [[titre, texte], [titre, texte]] }
      type : "service", "relance" (du coach), "direct" (ballon du coach chez l'adversaire, qui fait un retour direct),
-            "attaque" (du coach, à défendre), "passeur" (le passeur prend le 1er contact).
-     pour : équipe qui joue le ballon ("A" orange par défaut, "B" blanche) ; fin : "point" ou "defendu". */
+            "attaque" (du coach, à défendre), "passeur" (le passeur prend le 1er contact),
+            "deuxieme" (le ballon du coach arrive sur le 2e contact, loin du filet).
+     pour : équipe qui joue le ballon ("A" orange par défaut, "B" blanche) ;
+     fin : "point", "defendu" ou "bidouille" (bidouille derrière le bloc, prise par le défenseur de la ligne qui avance). */
   function ballons(s, o) {
     const T = equipe(s, "A", "a", { roles: o.rolesA });
     const six = equipe(s, "B", "b", { pre: "s", roles: o.rolesB });
@@ -582,19 +586,27 @@
       } else if (ph.type === "attaque") {
         jeu.push(P(base("base"), [A(b, "co"), W(0.8), S("co"), B(b, fond(R), "attaque")]),
           P(M(R.id("p"), R.pt(REP.passeur), { d: 1.0 }), M(R.id("c"), R.pt(-2.6, 4.3), { d: 0.8 }), B(b, R.id("p"), "defense", { h: 1.1 })));
+      } else if (ph.type === "deuxieme") {
+        jeu.push(P(base("base"), [A(b, "co"), W(0.8)]),
+          P(M(fond(R), R.pt(-3.2, 4.4), { d: 0.9 }), B(b, fond(R), "relance"), D(fond(R), "J'ai la 2e !")));
       } else {
         jeu.push(P(base("base"), [A(b, "co"), W(0.8), S("co"), B(b, R.id("p"), "attaque")]),
           P(M(fond(R), R.pt(-3.2, 4.4), { d: 0.9 }), B(b, fond(R), "defense", { h: 1.1 }), D(fond(R), "J'ai !")));
       }
       s.chapitre(ph.chapitre);
       s.etape(ph.etapes[0][0], ph.etapes[0][1], jeu);
-      const en = ph.type === "passeur" ? "4" : ph.en || "4";
-      const att = ph.type === "passeur"
+      const sansPasseur = ph.type === "passeur" || ph.type === "deuxieme";
+      const en = sansPasseur ? "4" : ph.en || "4";
+      const att = sansPasseur
         ? [P(M(R.id("r1"), R.pt(REP.att4), { d: 1.0 }), B(b, R.id("r1"), "transi")), S(R.id("r1"))]
         : R.passe(b, en);
       const suite = [P(att, Df.vers(DEF[en], { d: 0.9 }), ph.annonce ? D(Df.id("c"), ph.annonce) : null), Df.bloc(en)];
       if (ph.fin === "defendu") suite.push(B(b, fond(Df), "attaque"), PT(fond(Df), ph.pop || "Défendu !"));
-      else {
+      else if (ph.fin === "bidouille") {
+        // Bidouille derrière le bloc : le défenseur de la ligne avance pour la prendre.
+        const ligne = en === "2" ? ["l", [-2.6, 1.7]] : ["p", [-2.6, 7.3]];
+        suite.push(P(M(Df.id(ligne[0]), Df.pt(ligne[1]), { d: 0.7 }), B(b, Df.id(ligne[0]), "bidouille")), PT(Df.id(ligne[0]), ph.pop || "Défendu !"));
+      } else {
         const pt = R.pt(SOL[en]);
         suite.push(B(b, pt, "attaque", { sol: true }), PT(pt, ph.pop || "+1"));
       }

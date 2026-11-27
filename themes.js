@@ -126,7 +126,13 @@
       "2026-11-18-exo1": ["bloc", "passe"],
       "2026-11-18-exo2": ["service"],
       "2026-11-18-exo3a": ["attaque"],
-      "2026-11-18-exo3b": ["opposition"]
+      "2026-11-18-exo3b": ["opposition"],
+
+      "2026-11-27-passe-et-suit": ["echauffement"],
+      "2026-11-27-manchette": ["echauffement"],
+      "2026-11-27-exo1": ["defense"],
+      "2026-11-27-exo2": ["attaque", "defense"],
+      "2026-11-27-exo3": ["opposition", "systeme"]
     }
   };
 })();
