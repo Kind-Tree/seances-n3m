@@ -23,6 +23,7 @@
   const COURSE = 4.4;       // vitesse de course, en m/s à la vitesse x1
   const AMORCE = 0.45;      // temps laissé pour lire avant la première action d'une étape
   const TENUE = 0.8;        // arrêt sur image après la dernière action d'une étape
+  const CADENCE = 1.5;      // rythme de lecture à la vitesse x1 de l'interface (1 = temps réel de la scène)
 
   const VUES = {
     tout: { x0: -11.8, x1: 11.8, y0: -2.2, y1: 11.2 },
@@ -852,12 +853,12 @@
 
   Lecteur.prototype._boucle = function (maintenant) {
     if (!this.enLecture) return;
-    const dt = Math.min(0.1, (maintenant - this._avant) / 1000) * this.vitesse;
+    const dt = Math.min(0.1, (maintenant - this._avant) / 1000) * this.vitesse * CADENCE;
     this._avant = maintenant;
     const sc = this.scene;
     if (this.repos > 0) {
       // Arrêt sur la dernière image avant de reprendre au début.
-      this.repos -= dt / this.vitesse;
+      this.repos -= dt / (this.vitesse * CADENCE);
       if (this.repos <= 0) {
         this.t = 0;
         this.afficher();

@@ -221,6 +221,32 @@
   .programme .genre { font-size: 12px; color: var(--texte-doux); white-space: nowrap; }
   .programme button[aria-current="true"] { border-color: var(--orange); background: var(--orange-pale); }
 
+  /* ----- Répertoire par thème ----- */
+  .choix-ligne { flex-wrap: wrap; }
+  .bascule { min-height: 44px; padding: 6px 14px; border: 1.5px solid var(--texte); border-radius: 6px; background: transparent; font-weight: 700; white-space: nowrap; cursor: pointer; }
+  .bascule[aria-expanded="true"] { border-color: var(--orange); background: var(--orange-pale); }
+  @media (max-width: 599px) {
+    .bascule { flex: 1 1 100%; }
+  }
+  .repertoire .intro { margin: 0; font-size: 14px; color: var(--texte-doux); }
+  .themes { display: grid; gap: 8px; align-items: start; }
+  .themes details { border: 1px solid var(--filet); border-radius: 6px; }
+  .themes details[open] { border-color: var(--texte); }
+  .themes summary { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+  .themes summary::-webkit-details-marker { display: none; }
+  .themes summary::before { content: "+"; width: 14px; color: var(--orange-texte); font-size: 20px; line-height: 1; text-align: center; }
+  .themes details[open] summary::before { content: "–"; }
+  .themes summary .nb { margin-left: auto; min-width: 28px; padding: 2px 6px; background: var(--noir-tab); color: var(--orange); text-align: center; font-variant-numeric: tabular-nums; }
+  .themes ul { display: grid; margin: 0; padding: 0 12px 6px; list-style: none; }
+  .themes li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0; border-top: 1px solid var(--filet); }
+  .themes .t { flex: 1 1 100%; font-weight: 700; }
+  .themes .genre { font-size: 12px; color: var(--texte-doux); }
+  .themes a { display: inline-grid; place-items: center; min-height: 36px; padding: 4px 10px; border: 1px solid var(--filet); border-radius: 4px; color: var(--texte); font-size: 14px; font-variant-numeric: tabular-nums; text-decoration: none; }
+  .themes a:hover { border-color: var(--orange); background: var(--orange-pale); }
+  @media (min-width: 960px) {
+    .themes { grid-template-columns: 1fr 1fr; }
+  }
+
   /* ----- Légende des pions ----- */
   .aide { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--filet); font-size: 14px; color: var(--texte-doux); }
   .aide ul { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
@@ -257,11 +283,18 @@
     <div class="choix-ligne">
       <label class="etiquette" for="choixSeance">Séance</label>
       <select id="choixSeance"></select>
+      <button class="bascule" id="ouvrirRepertoire" type="button" aria-expanded="false" aria-controls="repertoire">Répertoire par thème</button>
     </div>
     <p class="axes" id="axes"></p>
   </section>
 
-  <div class="colonnes">
+  <section class="bloc repertoire" id="repertoire" aria-label="Répertoire des exercices par thème" hidden>
+    <h3 class="titre-bloc">Répertoire par thème</h3>
+    <p class="intro" id="repertoireIntro"></p>
+    <div class="themes" id="themes"></div>
+  </section>
+
+  <div class="colonnes" id="colonnes">
     <section class="lecteur" aria-label="Animation de l'exercice">
       <div class="exo-nav">
         <button class="carre" id="exoPrec" type="button" aria-label="Exercice précédent">
@@ -353,6 +386,7 @@
 <script src="data/2026-11-06.js"></script>
 <script src="data/2026-11-13.js"></script>
 <script src="data/2026-11-18.js"></script>
+<script src="themes.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

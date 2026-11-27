@@ -194,6 +194,66 @@
     }
   }
 
+  // ----- Répertoire par thème (classement dans themes.js) -----
+  function construireRepertoire() {
+    const T = N3M.themes;
+    if (!T) {
+      $("ouvrirRepertoire").hidden = true;
+      return;
+    }
+    // thème -> titre -> occurrences ; les séances sont déjà triées de la plus récente à la plus ancienne.
+    const groupes = {};
+    const titres = {};
+    seances.forEach((s) => s.blocs.forEach((b) => {
+      const themes = T.exos[s.id + "-" + b.id] || ["a-classer"];
+      if (themes.length) titres[b.titre] = true;
+      themes.forEach((id) => {
+        const g = groupes[id] = groupes[id] || {};
+        (g[b.titre] = g[b.titre] || []).push({ s: s, b: b });
+      });
+    }));
+    $("repertoireIntro").textContent = Object.keys(titres).length + " exercices, tirés de " + seances.length + " séances. Un exercice repris d'une séance à l'autre apparaît une seule fois, avec ses dates ; il peut figurer dans deux thèmes. Touchez une date pour ouvrir l'exercice.";
+    const zone = $("themes");
+    vider(zone);
+    T.liste.concat([["a-classer", "À classer"]]).forEach((theme) => {
+      const g = groupes[theme[0]];
+      if (!g) return;
+      const liste = creer("ul");
+      Object.keys(g).forEach((titre) => {
+        const li = creer("li", null, [creer("span", { classe: "t", texte: titre })]);
+        g[titre].forEach((x) => {
+          const lien = creer("a", {
+            href: "#" + x.s.id + "-" + x.b.id,
+            texte: x.s.date.slice(0, 5) + x.s.date.slice(10),
+            title: x.s.jour + " " + x.s.date + (x.b.n ? " · " + x.b.n : "")
+          });
+          lien.addEventListener("click", () => {
+            basculerRepertoire(false);
+            $("exoNum").scrollIntoView({ block: "start" });
+          });
+          li.appendChild(lien);
+        });
+        if (!g[titre].some((x) => estAnime(x.b))) li.appendChild(creer("span", { classe: "genre", texte: "fiche sans animation" }));
+        liste.appendChild(li);
+      });
+      zone.appendChild(creer("details", null, [
+        creer("summary", null, [creer("span", { texte: theme[1] }), creer("span", { classe: "nb", texte: String(Object.keys(g).length) })]),
+        liste
+      ]));
+    });
+  }
+
+  function basculerRepertoire(ouvert) {
+    $("repertoire").hidden = !ouvert;
+    $("colonnes").hidden = ouvert;
+    $("axes").hidden = ouvert;
+    const bouton = $("ouvrirRepertoire");
+    bouton.setAttribute("aria-expanded", ouvert ? "true" : "false");
+    bouton.textContent = ouvert ? "Retour à la séance" : "Répertoire par thème";
+    if (ouvert && lecteur) lecteur.pause();
+    if (!ouvert) surLargeur();
+  }
+
   // ----- Rappels du lecteur -----
   function majEtape(i) {
     const e = scene.etapes[i];
@@ -234,8 +294,10 @@
   $("vitesse").addEventListener("change", (ev) => { if (lecteur) lecteur.vitesse = Number(ev.target.value); });
   $("pasAPas").addEventListener("change", (ev) => { if (lecteur) lecteur.pasAPas = ev.target.checked; });
   $("choixSeance").addEventListener("change", (ev) => {
+    basculerRepertoire(false);
     choisirSeance(seances.find((s) => s.id === ev.target.value), null, true);
   });
+  $("ouvrirRepertoire").addEventListener("click", () => basculerRepertoire($("repertoire").hidden));
   $("modeCoach").addEventListener("change", (ev) => {
     try { localStorage.setItem("n3m-coach", ev.target.checked ? "1" : "0"); } catch (erreur) { /* stockage indisponible */ }
     Array.prototype.forEach.call(document.querySelectorAll(".valider"), (n) => { n.hidden = !ev.target.checked; });
@@ -253,6 +315,7 @@
 
   window.addEventListener("hashchange", () => {
     const cible = lireAncre();
+    if (cible) basculerRepertoire(false);
     if (!cible || (cible.seance === seance && cible.bloc === bloc)) return;
     if (cible.seance === seance) choisirBloc(cible.bloc, true);
     else choisirSeance(cible.seance, cible.bloc, true);
@@ -276,6 +339,7 @@
     return;
   }
   remplirSeances();
+  construireRepertoire();
   const depart = lireAncre();
   if (depart) choisirSeance(depart.seance, depart.bloc, false);
   else choisirSeance(seances[0], null, false);
