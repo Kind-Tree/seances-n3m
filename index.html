@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Séances animées N3M</title>
+<style>
+  /* Mise en page : bandeau noir en tête (kicker orange, titre blanc, logo), puis le lecteur
+     (terrain animé, légende de l'étape, commandes) et la fiche de l'exercice.
+     Une colonne sur téléphone, deux colonnes au-delà de 960 px. Charte VBG : orange et noir, Arial. */
+  :root {
+    --orange: #F26910;
+    --orange-texte: #C2500A;
+    --noir: #111111;
+    --noir-tab: #1F1F1F;
+    --fond: #FFFFFF;
+    --fond-doux: #F5F5F5;
+    --texte: #1A1A1A;
+    --texte-doux: #6B6B6B;
+    --filet: #D9D9D9;
+    --orange-pale: #FDF0E6;
+    --sur-noir: #FFFFFF;
+    --sur-noir-doux: #D9D9D9;
+    --sur-orange: #111111;
+    /* Le terrain est une ardoise sombre, identique dans les deux thèmes. */
+    --t-libre: #161616;
+    --t-terrain: #2C2C2C;
+    --t-avant: #363636;
+    --t-ligne: #FFFFFF;
+    --t-a: #F26910;
+    --t-b: #FFFFFF;
+    --t-c: #BDBDBD;
+    --t-encre: #111111;
+    --t-ballon: #FFD84A;
+    --t-trace: #FFE27A;
+    --t-course: #C9C9C9;
+    --t-objet: #8F8F8F;
+    --t-note: #C9C9C9;
+    --police: Arial, "Liberation Sans", Helvetica, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --orange-texte: #F26910;
+      --fond: #111111;
+      --fond-doux: #1F1F1F;
+      --texte: #F5F5F5;
+      --texte-doux: #B5B5B5;
+      --filet: #3D3D3D;
+      --orange-pale: #2B1B10;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --orange-texte: #F26910;
+    --fond: #111111;
+    --fond-doux: #1F1F1F;
+    --texte: #F5F5F5;
+    --texte-doux: #B5B5B5;
+    --filet: #3D3D3D;
+    --orange-pale: #2B1B10;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 16px/1.45 var(--police); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--noir); z-index: 10; }
+  [hidden] { display: none !important; }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+  .gouttiere { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+  /* ----- Bandeau ----- */
+  .bandeau { background: var(--noir); border-bottom: 5px solid var(--orange); }
+  .bandeau .gouttiere { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; }
+  .kicker { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--orange); }
+  h1 { margin: 4px 0 0; font-size: clamp(22px, 5.4vw, 32px); line-height: 1.08; text-transform: uppercase; color: var(--sur-noir); }
+  .bandeau .sous { margin: 4px 0 0; font-size: 13px; color: var(--sur-noir-doux); }
+  .logo { flex: none; width: 62px; height: auto; }
+
+  /* ----- Choix de la séance ----- */
+  .page { display: grid; gap: 18px; padding-block: 16px 28px; }
+  .choix { display: grid; gap: 8px; }
+  .choix-ligne { display: flex; align-items: center; gap: 10px; }
+  .etiquette { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--texte-doux); }
+  select { min-height: 44px; padding: 8px 10px; border: 1.5px solid var(--texte); border-radius: 6px; background: var(--fond); }
+  #choixSeance { flex: 1; min-width: 0; font-weight: 700; }
+  .axes { margin: 0; font-size: 14px; color: var(--texte-doux); }
+  .axes b { color: var(--texte); }
+
+  .colonnes, .cote { display: grid; gap: 22px; }
+  .colonnes > *, .cote > * { min-width: 0; }
+
+  /* ----- Lecteur ----- */
+  .lecteur { display: grid; gap: 10px; }
+  .exo-nav { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 8px; }
+  .exo-titre { text-align: center; }
+  .exo-titre .kicker { color: var(--orange-texte); letter-spacing: 0.2em; }
+  h2 { margin: 2px 0 0; font-size: clamp(17px, 4.4vw, 22px); line-height: 1.15; text-transform: uppercase; text-wrap: balance; }
+  .carre { width: 44px; height: 44px; display: grid; place-items: center; border: 1.5px solid var(--texte); border-radius: 6px; background: transparent; cursor: pointer; }
+  .carre:disabled { opacity: 0.3; cursor: default; }
+  .carre svg, .rond svg { width: 22px; height: 22px; fill: currentColor; }
+
+  .scene { display: grid; justify-items: center; background: var(--t-libre); border: 1px solid var(--filet); border-radius: 10px; overflow: hidden; }
+  .scene svg { display: block; width: 100%; height: auto; max-width: 100%; max-height: 78vh; }
+
+  .progression { display: flex; gap: 3px; }
+  .progression button { position: relative; height: 22px; min-width: 5px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+  .progression button::before, .progression button i { content: ""; position: absolute; left: 0; top: 8px; height: 6px; border-radius: 3px; }
+  .progression button::before { right: 0; background: var(--filet); }
+  .progression button i { width: 0; background: var(--orange); }
+
+  .legende { margin: 0; min-height: 4.35em; font-size: 16px; }
+  .legende .num { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 3px; background: var(--noir-tab); color: var(--orange); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .legende .chap { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange-texte); }
+
+  .commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .rond { width: 48px; height: 48px; display: grid; place-items: center; border: 2px solid var(--texte); border-radius: 50%; background: transparent; cursor: pointer; }
+  .rond.principal { width: 56px; height: 56px; border-color: var(--orange); background: var(--orange); color: var(--sur-orange); }
+  .rond.principal svg { width: 26px; height: 26px; }
+  .reglage { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+  .reglage input { width: 20px; height: 20px; accent-color: var(--orange); }
+  #vitesse { min-height: 40px; padding: 4px 8px; }
+  .sans-anim { margin: 0; padding: 12px 14px; border-left: 3px solid var(--orange); background: var(--fond-doux); font-size: 14px; color: var(--texte-doux); }
+
+  /* ----- Le terrain (SVG) ----- */
+  .sol-libre { fill: var(--t-libre); }
+  .sol-terrain { fill: var(--t-terrain); }
+  .sol-avant { fill: var(--t-avant); }
+  .ligne { fill: none; stroke: var(--t-ligne); stroke-width: 6; }
+  .ligne.contour { stroke-width: 7; }
+  .filet { stroke: var(--t-ligne); stroke-width: 15; stroke-dasharray: 5 7; }
+  .poteau { fill: var(--t-ligne); }
+  .antenne { fill: var(--t-a); }
+  .repere, .note, .zone-label, .pion text, .bulle text, .pop { font-family: var(--police); }
+  .repere { fill: var(--t-note); letter-spacing: 0.18em; }
+  .note { fill: var(--t-note); }
+  .note.fort { fill: var(--t-ligne); font-weight: 700; }
+  .banc { fill: var(--t-objet); stroke: var(--t-encre); stroke-width: 4; }
+  .caddie { fill: none; stroke: var(--t-objet); stroke-width: 7; }
+  .caddie-ballon { fill: var(--t-ballon); opacity: 0.85; }
+  .plot { fill: var(--t-a); stroke: var(--t-encre); stroke-width: 3; }
+  .frite { stroke: var(--t-a); stroke-width: 18; stroke-linecap: round; }
+  .trait { stroke: var(--t-a); stroke-width: 6; stroke-dasharray: 18 14; }
+  .zone circle, .zone rect { fill: var(--t-a); fill-opacity: 0.14; stroke: var(--t-a); stroke-width: 5; stroke-dasharray: 16 12; }
+  .zone-label { fill: var(--t-a); font-weight: 700; letter-spacing: 0.03em; }
+  .trace { fill: none; stroke: var(--t-trace); stroke-linecap: round; }
+  .t-tirets { stroke-dasharray: 22 17; }
+  .t-points { stroke-dasharray: 3 15; }
+  .t-course { stroke: var(--t-course); stroke-dasharray: 2 13; }
+  .t-option { stroke: var(--t-course); stroke-dasharray: 10 12; }
+  .fleche { fill: var(--t-trace); }
+  .fleche.option { fill: var(--t-course); }
+  .option-label { fill: var(--t-ligne); font-family: var(--police); font-weight: 700; stroke: var(--t-encre); stroke-width: 9; stroke-linejoin: round; paint-order: stroke; }
+  .pion .corps { stroke: var(--t-encre); stroke-width: 5; }
+  .pion text { fill: var(--t-encre); font-weight: 700; }
+  .pion .nom { fill: var(--t-note); font-weight: 400; }
+  .pion.eq-a .corps, .pion.eq-a .nez { fill: var(--t-a); }
+  .pion.eq-b .corps, .pion.eq-b .nez { fill: var(--t-b); }
+  .pion.eq-c .corps, .pion.eq-c .nez { fill: var(--t-c); }
+  .pion .nez { stroke: var(--t-encre); stroke-width: 4; stroke-linejoin: round; }
+  .pion.lib .corps { fill: var(--t-encre); stroke-width: 10; }
+  .pion.eq-a.lib .corps { stroke: var(--t-a); }
+  .pion.eq-b.lib .corps { stroke: var(--t-b); }
+  .pion.eq-c.lib .corps { stroke: var(--t-c); }
+  .pion.eq-a.lib text { fill: var(--t-a); }
+  .pion.eq-b.lib text { fill: var(--t-b); }
+  .pion.eq-c.lib text { fill: var(--t-c); }
+  .pion.eq-coach .corps { fill: var(--t-encre); stroke: var(--t-a); stroke-width: 8; }
+  .pion.eq-coach text { fill: var(--t-ligne); }
+  .anneau { fill: none; stroke: var(--t-ligne); stroke-width: 7; }
+  .impact { fill: none; stroke: var(--t-trace); stroke-width: 8; }
+  .flash { fill: none; stroke: var(--t-trace); stroke-width: 9; }
+  .mains line { stroke-linecap: round; }
+  .mains-bord { stroke: var(--t-encre); }
+  .mains-trait { stroke: var(--t-ligne); }
+  .mains.eq-a .mains-trait { stroke: var(--t-a); }
+  .mains.eq-c .mains-trait { stroke: var(--t-c); }
+  .ombre { fill: #000000; }
+  .cuir { fill: var(--t-ballon); stroke: var(--t-encre); stroke-width: 5; }
+  .couture { fill: none; stroke: var(--t-encre); stroke-width: 3.5; stroke-linecap: round; }
+  .bulle rect { fill: var(--t-ligne); stroke: var(--t-encre); stroke-width: 5; }
+  .bulle text { fill: var(--t-encre); font-weight: 700; }
+  .pop { fill: var(--t-ballon); font-weight: 700; stroke: var(--t-encre); stroke-width: 12; stroke-linejoin: round; paint-order: stroke; }
+
+  /* ----- Fiche de l'exercice ----- */
+  .fiche { display: grid; gap: 12px; font-size: 15px; }
+  .fiche p { margin: 0; }
+  .titre-bloc { display: flex; align-items: center; gap: 10px; margin: 0; padding-bottom: 6px; border-bottom: 2px solid var(--texte); font-size: 15px; text-transform: uppercase; }
+  .titre-bloc::before { content: ""; width: 22px; height: 8px; background: var(--orange); }
+  .effectif { font-size: 13px; color: var(--texte-doux); }
+  .etapes { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .etapes .chapitre { margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange-texte); }
+  .etapes button { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: 4px; background: transparent; text-align: left; cursor: pointer; }
+  .etapes button .n { display: grid; place-items: center; width: 24px; height: 24px; background: var(--noir-tab); color: var(--sur-noir); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .etapes button[aria-current="step"] { background: var(--orange-pale); }
+  .etapes button[aria-current="step"] .n { background: var(--orange); color: var(--sur-orange); }
+  .cle { padding: 10px 14px; background: var(--orange); color: var(--sur-orange); font-weight: 700; }
+  .enjeu { padding: 9px 14px; background: var(--noir-tab); color: var(--sur-noir); }
+  .enjeu b { color: var(--orange); }
+  .plus b, .compo b { color: var(--orange-texte); }
+  .compo { font-size: 14px; color: var(--texte-doux); }
+  .valider { padding: 9px 12px; border-left: 3px solid var(--orange); background: var(--fond-doux); font-size: 14px; }
+  .tableau { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { padding: 7px 10px; background: var(--noir-tab); color: var(--sur-noir); text-align: left; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--filet); vertical-align: top; }
+  td:first-child { font-weight: 700; }
+  tbody tr:nth-child(even) td { background: var(--fond-doux); }
+
+  /* ----- Programme de la séance ----- */
+  .bloc { display: grid; gap: 12px; }
+  .programme ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .programme button { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 10px 6px 6px; border: 1px solid var(--filet); border-radius: 6px; background: transparent; text-align: left; cursor: pointer; }
+  .programme .n { display: grid; place-items: center; width: 28px; height: 28px; background: var(--noir-tab); color: var(--orange); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .programme .t { font-weight: 700; }
+  .programme .genre { font-size: 12px; color: var(--texte-doux); white-space: nowrap; }
+  .programme button[aria-current="true"] { border-color: var(--orange); background: var(--orange-pale); }
+
+  /* ----- Légende des pions ----- */
+  .aide { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--filet); font-size: 14px; color: var(--texte-doux); }
+  .aide ul { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
+  .aide li { display: inline-flex; align-items: center; gap: 7px; }
+  .puce { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--t-encre); border-radius: 50%; background: var(--t-a); color: var(--t-encre); font-size: 12px; font-weight: 700; }
+  .puce.b { background: var(--t-b); }
+  .puce.lib { border: 3px solid var(--t-a); background: var(--t-encre); color: var(--t-a); }
+  .puce.coach { border: 3px solid var(--t-a); border-radius: 5px; background: var(--t-encre); color: var(--t-ligne); }
+  .trait { width: 34px; height: 0; border-top: 3px solid var(--texte); }
+  .trait.tirets { border-top-style: dashed; }
+  .trait.points { border-top-style: dotted; border-top-color: var(--texte-doux); }
+
+  @media (min-width: 960px) {
+    .colonnes { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; }
+    .lecteur { position: sticky; top: 12px; }
+    .legende { min-height: 3em; }
+  }
+</style>
+</head>
+<body>
+<header class="bandeau">
+  <div class="gouttiere">
+    <div>
+      <p class="kicker">Volley / Nationale 3 / VBG</p>
+      <h1>Séances animées</h1>
+      <p class="sous">Les exercices de la N3M, étape par étape.</p>
+    </div>
+    <img class="logo" src="data:image/png;base64,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" width="132" height="141" alt="Logo du Volley-Ball Grégorien">
+  </div>
+</header>
+
+<main class="page gouttiere">
+  <section class="choix" aria-label="Choix de la séance">
+    <div class="choix-ligne">
+      <label class="etiquette" for="choixSeance">Séance</label>
+      <select id="choixSeance"></select>
+    </div>
+    <p class="axes" id="axes"></p>
+  </section>
+
+  <div class="colonnes">
+    <section class="lecteur" aria-label="Animation de l'exercice">
+      <div class="exo-nav">
+        <button class="carre" id="exoPrec" type="button" aria-label="Exercice précédent">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 8 12l7.5 7.5 1.6-1.6L11.2 12l5.9-5.9z"/></svg>
+        </button>
+        <div class="exo-titre">
+          <p class="kicker" id="exoNum"></p>
+          <h2 id="exoTitre"></h2>
+        </div>
+        <button class="carre" id="exoSuiv" type="button" aria-label="Exercice suivant">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 4.5 16 12l-7.5 7.5-1.6-1.6 5.9-5.9-5.9-5.9z"/></svg>
+        </button>
+      </div>
+
+      <div class="scene" id="scene">
+        <svg id="terrain" role="img" aria-labelledby="exoTitre" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="progression" id="progression"></div>
+      <p class="legende" id="legende" aria-live="polite"></p>
+
+      <div class="commandes" id="commandes">
+        <button class="rond" id="etapePrec" type="button" aria-label="Étape précédente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.4v14H6zM19 5v14l-9.5-7z"/></svg>
+        </button>
+        <button class="rond principal" id="lecture" type="button" aria-label="Lire l'animation">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path id="iconeLecture" d="M7 4.5v15l12.5-7.5z"/></svg>
+        </button>
+        <button class="rond" id="etapeSuiv" type="button" aria-label="Étape suivante">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.6 5H18v14h-2.4zM5 5v14l9.5-7z"/></svg>
+        </button>
+        <label class="reglage" for="vitesse">Vitesse
+          <select id="vitesse">
+            <option value="0.5">× 0,5</option>
+            <option value="1" selected>× 1</option>
+            <option value="1.5">× 1,5</option>
+            <option value="2">× 2</option>
+          </select>
+        </label>
+        <label class="reglage" for="pasAPas"><input type="checkbox" id="pasAPas"> Pause à chaque étape</label>
+      </div>
+      <p class="sans-anim" id="sansAnim" hidden>Pas d'animation pour ce bloc : la fiche suffit.</p>
+    </section>
+
+    <div class="cote">
+      <section class="bloc" aria-label="Fiche de l'exercice">
+        <h3 class="titre-bloc">L'exercice</h3>
+        <div class="fiche" id="fiche"></div>
+      </section>
+      <section class="bloc programme" aria-label="Programme de la séance">
+        <h3 class="titre-bloc">Programme de la séance</h3>
+        <ol id="programme"></ol>
+      </section>
+    </div>
+  </div>
+
+  <footer class="aide">
+    <ul aria-label="Légende des pions">
+      <li><span class="puce">P</span> passeur</li>
+      <li><span class="puce">R4</span> réceptionneur-attaquant</li>
+      <li><span class="puce">C</span> central</li>
+      <li><span class="puce">Po</span> pointu</li>
+      <li><span class="puce lib">L</span> libéro</li>
+      <li><span class="puce b">1</span> autre groupe ou adversaire</li>
+      <li><span class="puce coach">Co</span> coach</li>
+    </ul>
+    <ul aria-label="Légende des trajectoires">
+      <li><span class="trait"></span> service ou attaque</li>
+      <li><span class="trait tirets"></span> passe, défense, relance</li>
+      <li><span class="trait points"></span> déplacement d'un joueur</li>
+    </ul>
+    <label class="reglage" for="modeCoach"><input type="checkbox" id="modeCoach"> Afficher les points à valider par le coach</label>
+  </footer>
+</main>
+
+<script src="moteur.js"></script>
+<script src="exercices.js"></script>
+<script src="data/2026-08-28.js"></script>
+<script src="data/2026-09-11.js"></script>
+<script src="data/2026-09-16.js"></script>
+<script src="data/2026-09-18.js"></script>
+<script src="data/2026-09-23.js"></script>
+<script src="data/2026-09-30.js"></script>
+<script src="data/2026-10-07.js"></script>
+<script src="data/2026-10-14.js"></script>
+<script src="data/2026-10-21.js"></script>
+<script src="data/2026-10-28.js"></script>
+<script src="data/2026-10-30.js"></script>
+<script src="data/2026-11-04.js"></script>
+<script src="data/2026-11-06.js"></script>
+<script src="data/2026-11-13.js"></script>
+<script src="data/2026-11-18.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
