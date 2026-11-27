@@ -1,7 +1,7 @@
 /* Séance N3M du vendredi 27/11/2026 — 12 joueurs. */
 (function () {
   "use strict";
-  const { B, M, P, W, S, D, PT, A, X, FL } = N3M.a;
+  const { B, M, P, W, S, D, PT, X, FL } = N3M.a;
   const EX = N3M.exos;
 
   N3M.seance({
@@ -71,7 +71,7 @@
           ["Compter", "les attaques du central gagnées sur sa série de 4-5 : on change de central après chaque série."],
           ["Ballon remonté", "même exigence que dans l'exo 1 : haut et dans le cœur du terrain."]
         ],
-        valider: "Lecture retenue, corrigée par le coach le 27/11 : les bouts de filet (pions blancs « BF ») sont hors du terrain, de l'autre côté du filet, et attaquent dans le terrain du central. Ballon 1 : attaque forte sur l'un des 3 défenseurs, ballon remonté dans le cœur du terrain, puis un défenseur enchaîne à l'attaque en 4 ou en 2. Ballon 2 : juste après, le bout de filet fait une bidouille par-dessus le filet ; premier contact facile, et le central attaque. En face, les 3 défenseurs et le passeur défendent. Un central joue, l'autre attend. À corriger si c'est un autre joueur qui attaque à l'aile, ou si la bidouille vient d'ailleurs.",
+        valider: "Lecture retenue, corrigée par le coach le 27/11 : les bouts de filet (pions blancs « BF ») sont hors du terrain, en face, et attaquent dans le terrain du central. Les orange remontent le ballon et attaquent en 4 ou en 2. Les blancs défendent, reconstruisent, et leur dernier contact est une bidouille pour les orange : premier contact facile, et le central attaque. J'ai fait jouer la bidouille par un défenseur blanc venu au filet ; à corriger si c'est un bout de filet qui la joue. Un central joue, l'autre attend.",
         scene: function (s) {
           s.zone("coeurA", { x: -4.3, y: 4.5, r: 1.3 }, { label: "cœur de terrain" });
           // Côté 1 (orange) : passeur, central, 3 défenseurs ; un central en attente.
@@ -88,59 +88,63 @@
           s.j("bd3", [6.2, 1.9], "D", "b");
           s.j("f1", [1.0, -0.9], "BF", "b");
           s.j("f2", [1.0, 9.9], "BF", "b");
-          s.ballon("x1", "f1").ballon("x2", "f2").ballon("y1", null).ballon("y2", null);
+          s.ballon("x1", "f1").ballon("x2", "f2");
           s.etape("Mise en place", "Côté orange : 1 passeur, 1 central, 3 défenseurs. En face : 3 défenseurs, 1 passeur, et 2 bouts de filet hors du terrain, qui attaquent par-dessus le filet dans le terrain du central.", [W(0.6)]);
 
-          s.chapitre("Ballon 1 · attaque forte");
+          s.chapitre("Ballon 1");
           s.etape("Attaque forte par-dessus le filet", "Un bout de filet attaque fort, par-dessus le filet, sur l'un des trois défenseurs.", [
             S("f1"), B("x1", "a6", "attaque")
           ]);
           s.etape("On remonte comme on peut", "Le ballon est remonté haut, dans le cœur du terrain : même exigence que dans l'exo 1. Le passeur vient dessous.", [
             P(M("ap", [-3.9, 5.3], { d: 0.8 }), B("x1", "ap", "defense", { h: 1.1 }))
           ]);
-          s.etape("Attaque en 4 ou en 2", "Le passeur sert un défenseur, qui enchaîne à l'attaque en 4 ou en 2. En face, ça défend.", [
+          s.etape("Attaque en 4 ou en 2", "Le passeur sert un défenseur, qui enchaîne à l'attaque en 4 ou en 2, sur les blancs.", [
             P(M("a5", [-0.9, 1.35], { d: 1.2 }), B("x1", "a5", "transi"), FL("ap", [-0.9, 7.65], "ou en 2")),
-            S("a5"), B("x1", "bd2", "attaque"), PT("bd2", "Défendu !")
+            S("a5"), B("x1", "bd2", "attaque")
           ]);
-
-          s.chapitre("Ballon 2 · bidouille");
-          s.etape("Bidouille en face", "Juste après la passe, le bout de filet fait une bidouille par-dessus le filet : un premier contact facile.", [
-            X("x1"), A("y1", "f1"), W(0.3),
-            P(
-              M("a6", [-3.6, 3.2], { d: 0.9 }), M("ap", [-0.9, 6.0], { d: 0.9 }), M("a5", [-6.2, 1.9], { d: 1.2 }),
-              [W(0.2), B("y1", "a6", "bidouille")]
-            )
+          s.etape("Les blancs reconstruisent", "Les blancs défendent et reconstruisent. Leur dernier contact est une bidouille pour les orange : un premier contact facile.", [
+            P(M("bp", [2.8, 3.6], { d: 0.8 }), B("x1", "bp", "defense", { h: 1.1 }), M("a5", [-6.2, 1.9], { d: 1.3 }), M("ap", [-0.9, 6.0], { d: 1.0 })),
+            P(M("bd1", [1.2, 7.4], { d: 1.1 }), B("x1", "bd1", "transi")),
+            P(M("a1", [-3.4, 6.7], { d: 0.7 }), B("x1", "a1", "bidouille"))
           ]);
           s.etape("Enchaînement au centre", "Le central annonce son appel au passeur avant chaque ballon : fixe, fixe arrière ou déca. Il doit se trouver avec son passeur.", [
-            D("ac", "Fixe !"), B("y1", "ap", "recep"),
-            P(M("ac", [-0.85, 4.3], { d: 0.75 }), B("y1", "ac", "passe", { d: 0.8 })),
-            S("ac"), B("y1", "bd3", "attaque"), PT("bd3", "Défendu !")
+            P(
+              [D("ac", "Fixe !"), B("x1", "ap", "recep"),
+                P(M("ac", [-0.85, 4.3], { d: 0.75 }), B("x1", "ac", "passe", { d: 0.8 })),
+                S("ac"), B("x1", "bd3", "attaque"), PT("bd3", "Défendu !")],
+              M("bp", [0.9, 3.0], { d: 1.0 }),
+              M("bd1", [6.2, 7.1], { d: 1.2 })
+            )
           ]);
 
-          s.chapitre("À l'opposé");
-          s.etape("L'autre bout de filet", "L'autre bout de filet enchaîne à l'opposé, même schéma : attaque forte, ballon remonté, attaque à l'aile.", [
-            X("y1"),
-            P(M("ac", [-2.6, 4.3], { d: 0.8 }), M("a6", [-7.4, 4.5], { d: 1.0 })),
+          s.chapitre("Ballon 2 · à l'opposé");
+          s.etape("L'autre bout de filet", "L'autre bout de filet enchaîne à l'opposé, même schéma : attaque forte, ballon remonté, attaque à l'aile sur les blancs.", [
+            X("x1"),
+            P(M("ac", [-2.6, 4.3], { d: 0.8 }), M("a1", [-6.2, 7.1], { d: 0.9 })),
             S("f2"), B("x2", "a1", "attaque"),
             P(M("ap", [-3.9, 4.0], { d: 0.8 }), B("x2", "ap", "defense", { h: 1.1 })),
             P(M("a1", [-0.9, 7.65], { d: 1.2 }), B("x2", "a1", "transi")),
-            S("a1"), B("x2", "bd1", "attaque"), PT("bd1", "Défendu !")
+            S("a1"), B("x2", "bd1", "attaque")
           ]);
-          s.etape("Bidouille, puis le central", "Bidouille en face, premier contact facile, et le central enchaîne sur un autre appel. Il fait 4-5 attaques d'affilée.", [
-            X("x2"), A("y2", "f2"), W(0.3),
+          s.etape("Reconstruction, bidouille", "Même chose en face : défense, passe, et une bidouille en dernier contact pour les orange.", [
+            P(M("bp", [2.8, 5.2], { d: 0.8 }), B("x2", "bp", "defense", { h: 1.1 }), M("a1", [-6.2, 7.1], { d: 1.3 }), M("ap", [-0.9, 6.0], { d: 1.0 })),
+            P(M("bd3", [1.2, 1.6], { d: 1.1 }), B("x2", "bd3", "transi")),
+            P(M("a5", [-3.4, 2.3], { d: 0.7 }), B("x2", "a5", "bidouille"))
+          ]);
+          s.etape("Nouvel appel du central", "Premier contact facile, et le central enchaîne sur un autre appel. Il fait 4-5 attaques d'affilée.", [
             P(
-              M("a6", [-3.6, 5.8], { d: 0.9 }), M("ap", [-0.9, 6.0], { d: 0.9 }), M("a1", [-6.2, 7.1], { d: 1.2 }),
-              [W(0.2), B("y2", "a6", "bidouille")]
-            ),
-            D("ac", "Déca !"), B("y2", "ap", "recep"),
-            P(M("ac", [-0.9, 3.3], { d: 0.85 }), B("y2", "ac", "passe", { d: 0.9 })),
-            S("ac"), B("y2", [4.8, 6.0], "attaque", { sol: true }), PT([4.8, 6.0], "Gagnée !")
+              [D("ac", "Déca !"), B("x2", "ap", "recep"),
+                P(M("ac", [-0.9, 3.3], { d: 0.85 }), B("x2", "ac", "passe", { d: 0.9 })),
+                S("ac"), B("x2", [5.0, 6.2], "attaque", { sol: true }), PT([5.0, 6.2], "Gagnée !")],
+              M("bp", [0.9, 3.0], { d: 1.0 }),
+              M("bd3", [6.2, 1.9], { d: 1.2 })
+            )
           ]);
 
           s.chapitre("Fin de série");
           s.etape("On change de central", "On compte les attaques gagnées du central sur sa série, puis le central en attente prend sa place.", [
-            X("y2"),
-            P(M("a6", [-7.4, 4.5]), M("ac", [-5.8, 10.3], { d: 1.6 }), M("cw", [-2.6, 4.3], { d: 1.4 }))
+            X("x2"),
+            P(M("a5", [-6.2, 1.9]), M("ac", [-5.8, 10.3], { d: 1.6 }), M("cw", [-2.6, 4.3], { d: 1.4 }))
           ]);
         }
       },
